@@ -1,0 +1,2 @@
+Mark Fuge - markfuge at gmail - 2012
+Implementation of a collaborative filtering algorithm in Python that uses stochastic gradient decent to optimize a linear loss function of movie and user attributes, along with L2 regularization. This implementation was created as part of an assignment for UC Berkeley's CS281B Scalable Machine Learning course. I offer no guarentees on the performance or robustness of the implementation, but it may serve as a useful reference implementation for someone in the future.
