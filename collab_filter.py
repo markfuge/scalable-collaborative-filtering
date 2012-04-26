@@ -5,7 +5,7 @@ def rho(bu,bm,nu_u,nu_m,rating):
     return (bu+bm+nu_u.dot(nu_m) - rating)
 
 def adjust_eta(initial_eta):
-    return lambda t: initial_eta/(100*math.sqrt(t))
+    return lambda t: initial_eta/(math.sqrt(t))
 
 class CollaborativeFilter(object):
     """A collaborative filter object for storing and operating over the various
@@ -32,7 +32,7 @@ class CollaborativeFilter(object):
         initial_eta=0.1
         self.eta = adjust_eta(initial_eta)
         self.iteration=0
-        self.Lambda = .1
+        self.Lambda = 0
 
     def update(self,user_id,movie_id,rating):
         # Determine our descent step size
@@ -47,6 +47,10 @@ class CollaborativeFilter(object):
         nu_m = discount*nu_m - eta*nu_u*rho(bu,bm,nu_u,nu_m,rating)
         bu = discount*bu - eta*rho(bu,bm,nu_u,nu_m,rating)
         bm = discount*bm - eta*rho(bu,bm,nu_u,nu_m,rating)
+        self.bm[movie_id] = bm
+        self.bu[user_id] = bu
+        self.nu_u[user_id] = nu_u
+        self.nu_m[movie_id] = nu_m
         return self.loss(bu,bm,nu_u,nu_m,rating)
     
     def loss(self,bu,bm,nu_u,nu_m,rating):

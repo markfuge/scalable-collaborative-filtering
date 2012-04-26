@@ -28,7 +28,7 @@ def return_ratings():
     '''Returns an array of movie ratings and timestamps'''
     with open(DATA_PATH+RATING_PATH,'r') as file:
         ratings=[]
-        for line in file.readlines(100000):
+        for line in file.readlines():
             user_id,movie_id,rating,timestamp = mov_delim.split(line.strip())
             ratings.append((int(timestamp),int(user_id),int(movie_id),float(rating)))
     return ratings
