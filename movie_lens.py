@@ -1,11 +1,13 @@
 '''Helper module for loading and processing the MovieLens 10M data'''
 import re
+import os
 from random import shuffle
 
 DATA_PATH = '.\\data\\'
 MOVIE_PATH = 'movies.dat'
 RATING_PATH = 'ratings.dat'
 mov_delim = re.compile('::')
+import cPickle as pickle
 
 def return_movie_attributes():
     '''Returns an associative array keyed by the movie id for faster lookup later.
@@ -64,17 +66,33 @@ def get_user_movie_stats(data):
             movie_set.add(movie_id)
     return len(user_set),len(movie_set)
 
+def data_exists():
+    '''Checks if the validation and testing data file exist already - returns True if they do.'''
+    return os.path.exists('validation.dat') and os.path.exists('testing.dat') and os.path.exists('nums.dat')
+
+
 def get_data():
     '''Retrieves the relevant data from disk and does any necessary pre-processing. Specifically:
        1) Reads in the movie and ratings files.
        2) splits the data set into validation and testing.
        3) Discards movies/ratings that only appear in the test set    
     '''
-    validation,testing = split_ratings( return_ratings() )
-    # Only include test movies that were in the database
-    testing = clean_testing(validation, testing)
-    # Permute the order of the test set
-    shuffle(testing)
-    num_users,num_movies = get_user_movie_stats(validation)
+    if not data_exists():
+        validation,testing = split_ratings( return_ratings() )
+        # Only include test movies that were in the database
+        testing = clean_testing(validation, testing)
+        # Permute the order of the test set
+        shuffle(testing)
+        num_users,num_movies = get_user_movie_stats(validation)
+        # Dump the files for later
+        pickle.dump(validation,file('validation.dat','wb'))
+        pickle.dump(testing,file('testing.dat','wb'))
+        pickle.dump((num_users,num_movies),file('nums.dat','wb'))
+    else:
+        print 'loading existing files'
+        validation = pickle.load(file('validation.dat','rb'))
+        testing = pickle.load(file('testing.dat','rb'))
+        num_users,num_movies = pickle.load(file('nums.dat','rb'))
+
     return validation,testing,num_users,num_movies
 

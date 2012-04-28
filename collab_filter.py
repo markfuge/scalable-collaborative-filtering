@@ -1,11 +1,12 @@
 import numpy as np
 import math
+import cPickle as pickle
 
 def rho(bu,bm,nu_u,nu_m,rating):
     return (bu+bm+nu_u.dot(nu_m) - rating)
 
-def adjust_eta(initial_eta):
-    return lambda t: initial_eta/(math.sqrt(t))
+def adjust_eta(alpha,beta):
+    return lambda t: 1/(math.sqrt(alpha+beta*t))
 
 class CollaborativeFilter(object):
     """A collaborative filter object for storing and operating over the various
@@ -29,35 +30,44 @@ class CollaborativeFilter(object):
         self.nu_u = dict()
         self.nu_m = dict()
         # Intialize the learning rate for stochastic gradient descent
-        initial_eta=0.1
-        self.eta = adjust_eta(initial_eta)
+        self.initial_eta=0.1
+        self.alpha = 10
+        self.beta =0.1
+        self.eta = adjust_eta(self.alpha,self.beta)
         self.iteration=0
-        self.Lambda = 0
+        self.Lambda = 1
 
     def update(self,user_id,movie_id,rating):
         # Determine our descent step size
         self.iteration+=1
         eta = self.eta(self.iteration)
+        print "eta: "+str(eta)
         # Fetch the relevant vectors
         nu_u,bu = self.get_user(user_id)
         nu_m,bm = self.get_movie(movie_id)
 
         discount = 1-self.Lambda*eta
-        nu_u = discount*nu_u - eta*nu_m*rho(bu,bm,nu_u,nu_m,rating)
-        nu_m = discount*nu_m - eta*nu_u*rho(bu,bm,nu_u,nu_m,rating)
-        bu = discount*bu - eta*rho(bu,bm,nu_u,nu_m,rating)
-        bm = discount*bm - eta*rho(bu,bm,nu_u,nu_m,rating)
+        prediction = rho(bu,bm,nu_u,nu_m,rating)
+        nu_u = discount*nu_u - eta*nu_m*prediction
+        prediction = rho(bu,bm,nu_u,nu_m,rating)
+        nu_m = discount*nu_m - eta*nu_u*prediction
+        prediction = rho(bu,bm,nu_u,nu_m,rating)
+        bu = discount*bu - eta*prediction
+        prediction = rho(bu,bm,nu_u,nu_m,rating)
+        bm = discount*bm - eta*prediction
         self.bm[movie_id] = bm
         self.bu[user_id] = bu
         self.nu_u[user_id] = nu_u
         self.nu_m[movie_id] = nu_m
         return self.loss(bu,bm,nu_u,nu_m,rating)
+
+    def predict(self,user_id,movie_id,rating):
+        nu_u,bu = self.get_user(user_id)
+        nu_m,bm = self.get_movie(movie_id)
+        return rho(bu,bm,nu_u,nu_m,rating)**2
     
     def loss(self,bu,bm,nu_u,nu_m,rating):
-       return 0.5*rho(bu,bm,nu_u,nu_m,rating)**2 + self.Lambda/2*(np.linalg.norm(nu_u)**2 + bu**2 + np.linalg.norm(nu_m)**2 + bm**2)
-
-    def init_latent_factor_vector(self,dimensions):
-        return np.random.rand(dimensions)-0.5
+        return 0.5*rho(bu,bm,nu_u,nu_m,rating)**2 + self.Lambda/2*(nu_u.dot(nu_u) + bu**2 + nu_m.dot(nu_m) + bm**2)
 
     def get(self,dictionary,id,init_function):
         '''Fetches a value from a given dictionary or creates a new random latent factor vector
@@ -70,12 +80,20 @@ class CollaborativeFilter(object):
             dictionary[id]= init_function
             return dictionary[id]
 
+    def init_latent_factor_vector(self,dimensions):
+        return np.random.rand(dimensions)-.5
+
     def get_user(self,userid):
         '''Returns the nu and b vectors for a specific user id'''
         return (self.get(self.nu_u,userid,self.init_latent_factor_vector(self.num_latent)),
-                self.get(self.bu,userid,np.random.rand()-.5))
+                self.get(self.bu,userid,np.random.rand()-0.5))
     
     def get_movie(self,movieid):
         '''Returns the nu and b vectors for a specific movie id'''
         return (self.get(self.nu_m,movieid,self.init_latent_factor_vector(self.num_latent)),
-                self.get(self.bm,movieid,np.random.rand()-.5))
+                self.get(self.bm,movieid,np.random.rand()+3))
+
+    def save_model(self):
+        outfile = open(str(self.Lambda)+'-model.dat','wb')
+        pickle.dump((self.bu,self.bm,self.nu_u,self.nu_m,self.initial_eta,self.iteration),outfile)
+        outfile.close()
