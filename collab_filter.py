@@ -34,7 +34,7 @@ class CollaborativeFilter(object):
         # Intialize the learning rate for stochastic gradient descent
         self.initial_eta=0.1
         self.alpha = 10
-        self.beta =0.1
+        self.beta =0.01
         self.eta = adjust_eta(self.alpha,self.beta)
         self.iteration=0
         self.Lambda = 1

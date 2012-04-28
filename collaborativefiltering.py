@@ -27,9 +27,9 @@ if __name__ == "__main__":
             total_loss+=loss
             average_loss+=loss
             if i % n_avg ==0:
-                print 'Iter: '+str(i)+'; Average Loss: '+str(average_loss/n_avg)
+                print 'Iter: %d; Average Loss: %.2e; Eta: %.2e' % (i,average_loss/n_avg,cf.eta(cf.iteration))
                 average_loss=0
-        print 'Total Loss: '+str(total_loss)
+        print 'Average Training Loss: '+str(total_loss/len(training))
 
         # Now time to do testing
         training_error=0
@@ -44,7 +44,7 @@ if __name__ == "__main__":
             error=cf.predict(userid,movieid,rating)
             testing_error+=error
             #print 'Loss: '+str(loss)
-        print 'Lambda: '+ str(cf.Lambda) +'; Iterations: ' +str(cf.iteration)+'; Training error: '+str(training_error)+'; Testing error: '+str(testing_error)
-
+        print 'Lambda: %f; Iterations: %d; Avg. Training error: %e; Avg. Testing error: %e' % (cf.Lambda,cf.iteration,training_error/len(training),testing_error/len(testing))
+        
     # Save the model for later
     cf.save_model()
