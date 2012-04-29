@@ -9,6 +9,11 @@ RATING_PATH = 'ratings.dat'
 mov_delim = re.compile('::')
 import cPickle as pickle
 
+category_map = {'Action':0, 'Adventure':1, 'Animation':2, "Children":3, 'Comedy':4,
+                'Crime':5, 'Documentary':6, 'Drama':7, 'Fantasy':8, 'Film-Noir':9,
+                'Horror':10, 'Musical':11, 'Mystery':12, 'Romance':13, 'Sci-Fi':14,
+                'Thriller':15, 'War':16, 'Western': 17,'IMAX':18}
+
 def return_movie_attributes():
     '''Returns an associative array keyed by the movie id for faster lookup later.
        Parses a line in the MovieLens format - example:
@@ -17,10 +22,12 @@ def return_movie_attributes():
     attr_delim = re.compile('\|')   # MovieLens categorie example: ::Drama|Fantasy|Comedy\n
     attributes={}
     with open(DATA_PATH+MOVIE_PATH,'r') as file:
+        category_set = set()
         for line in file.readlines():
             id,movie_title,attribute_list = mov_delim.split(line.strip())
             id = int(id)
             attribute_list = attr_delim.split(attribute_list)
+            attribute_list = [category_map[attr] for attr in attribute_list if attr in category_map]
             attributes[id]=dict()
             attributes[id]['title']=movie_title.decode('utf-8')
             attributes[id]['categories']=attribute_list
