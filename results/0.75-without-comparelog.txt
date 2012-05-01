@@ -1,0 +1,10 @@
+Lambda: 0.750000; Iterations: 8000043; Avg. Training error: 0.9379; Avg. Testing error: 1.0756
+Lambda: 0.750000; Iterations: 16000086; Avg. Training error: 0.8854; Avg. Testing error: 1.0164
+Lambda: 0.750000; Iterations: 24000129; Avg. Training error: 0.8644; Avg. Testing error: 0.9891
+Lambda: 0.750000; Iterations: 32000172; Avg. Training error: 0.8542; Avg. Testing error: 0.9742
+Lambda: 0.750000; Iterations: 40000215; Avg. Training error: 0.8488; Avg. Testing error: 0.9653
+Lambda: 0.750000; Iterations: 48000258; Avg. Training error: 0.8458; Avg. Testing error: 0.9597
+Lambda: 0.750000; Iterations: 56000301; Avg. Training error: 0.8442; Avg. Testing error: 0.9559
+Lambda: 0.750000; Iterations: 64000344; Avg. Training error: 0.8432; Avg. Testing error: 0.9532
+Lambda: 0.750000; Iterations: 72000387; Avg. Training error: 0.8428; Avg. Testing error: 0.9514
+Lambda: 0.750000; Iterations: 80000430; Avg. Training error: 0.8426; Avg. Testing error: 0.9500
