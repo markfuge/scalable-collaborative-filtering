@@ -29,7 +29,7 @@ class CollaborativeFilter(object):
         self.num_categories = 19 # Hard-coded from the dataset
         self.bm = dict()
         self.bu = dict()
-        self.mu=3
+        self.mu=3.4
 
         # Initialize the latent factor space for users and movies
         # Random initialization
@@ -40,7 +40,7 @@ class CollaborativeFilter(object):
 
         # Intialize the learning rate for stochastic gradient descent
         self.initial_eta=0.1
-        self.alpha = 10
+        self.alpha = 20
         self.beta =0.01
         self.eta = adjust_eta(self.alpha,self.beta)
         self.iteration=0
@@ -54,7 +54,7 @@ class CollaborativeFilter(object):
         # Fetch the relevant vectors
         nu_u,bu = self.get_user(user_id)
         nu_m,bm = self.get_movie(movie_id)
-        if self.categories:
+        if self.categories and len(movie_attrs)>0:
             categories = self.get_category_list(movie_attrs)
             nu_c = sum(categories)
         else:
@@ -68,8 +68,15 @@ class CollaborativeFilter(object):
         nu_m = discount*nu_m - eta*nu_u*prediction
         if self.categories:
             prediction = rho(mu,bu,bm,nu_u,nu_m,rating,nu_c)
-            for attr in movie_attrs:
-                self.nu_c[attr] = discount*self.nu_c[attr] - eta*nu_u*prediction
+            # First, we regularize everything
+            for i in range(0,len(self.nu_c)):
+                self.nu_c[i] = discount*self.nu_c[i]
+            if len(movie_attrs)>0:
+                nu_c=0
+                # Then we subtract off the prediction error amounts
+                for attr in movie_attrs:
+                    self.nu_c[attr] -= eta*nu_u*prediction
+                    nu_c += self.nu_c[attr]
         prediction = rho(mu,bu,bm,nu_u,nu_m,rating,nu_c)
         bu = discount*bu - eta*prediction
         prediction = rho(mu,bu,bm,nu_u,nu_m,rating,nu_c)
@@ -87,14 +94,13 @@ class CollaborativeFilter(object):
         nu_u,bu = self.get_user(user_id)
         nu_m,bm = self.get_movie(movie_id)
         nu_c = None
-        if self.categories:
+        if self.categories and len(categories)>0:
             nu_c = sum(self.get_category_list(categories))
         return rho(self.mu,bu,bm,nu_u,nu_m,rating,nu_c)**2
     
     def loss(self,mu,bu,bm,nu_u,nu_m,rating,nu_c=None):
         l_c = 0
-        if self.categories:
-            assert nu_c is not None
+        if self.categories and nu_c is not None:
             l_c = nu_c.dot(nu_c)
         r_um=rho(mu,bu,bm,nu_u,nu_m,rating,nu_c)
         return 0.5*r_um**2 + self.Lambda/2*(nu_u.dot(nu_u) + bu**2 + nu_m.dot(nu_m) + bm**2+l_c)
@@ -112,17 +118,17 @@ class CollaborativeFilter(object):
             return dictionary[id]
 
     def init_latent_factor_vector(self,dimensions):
-        return np.random.rand(dimensions)-.5
+        return 1*(np.random.rand(dimensions)-.5)
 
     def get_user(self,userid):
         '''Returns the nu and b vectors for a specific user id'''
         return (self.get(self.nu_u,userid,self.init_latent_factor_vector(self.num_latent)),
-                self.get(self.bu,userid,np.random.rand()-0.5))
+                self.get(self.bu,userid,1*(np.random.rand()-0.5)))
     
     def get_movie(self,movieid):
         '''Returns the nu and b vectors for a specific movie id'''
         return (self.get(self.nu_m,movieid,self.init_latent_factor_vector(self.num_latent)),
-                self.get(self.bm,movieid,np.random.rand()-0.5))
+                self.get(self.bm,movieid,1*(np.random.rand()-0.5)))
 
     def get_categories(self,attrs):
         '''Returns the sum of category vectors for a set of categories'''
@@ -133,6 +139,7 @@ class CollaborativeFilter(object):
         return [self.nu_c[item] for item in attrs]
 
     def save_model(self):
-        outfile = open(str(self.Lambda)+'-model.dat','wb')
+        outfile = open(str(self.Lambda)+('-with' if self.categories else '-without')+'-model.dat','wb')
         pickle.dump((self.bu,self.bm,self.nu_u,self.nu_m,self.initial_eta,self.iteration),outfile)
         outfile.close()
+
