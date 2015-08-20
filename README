@@ -1,4 +1,4 @@
 Mark Fuge - markfuge at gmail - 2012
 Implementation of a collaborative filtering algorithm in Python that uses stochastic gradient decent to optimize a linear loss function of movie and user attributes, along with L2 regularization. This implementation was created as part of an assignment for UC Berkeley's CS281B Scalable Machine Learning course. I offer no guarentees on the performance or robustness of the implementation, but it may serve as a useful reference implementation for someone in the future.
 
-**Getting the Input Data:** This code was originally run on the english-language dump of Wikipedia, which was around 2GB compressed at the time. Now it should be significantly larger, and you can download it separately at: http://dumps.wikimedia.org/enwiki/
+Data: This uses the MovieLens Dataset as input. You can download this dataset from: http://grouplens.org/datasets/movielens/
